@@ -1,0 +1,79 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import random
+import datetime
+
+# Simulation Configuration
+NUM_HOUSEHOLDS = 10000  # Large dataset with 10,000 households
+NUM_BUSINESSES = 5000   # Large dataset with 5,000 businesses
+SIMULATION_DAYS = 365   # Simulate for a year
+
+# Energy consumption ranges (kWh per day)
+HOUSEHOLD_RANGE = (5, 30)  # Small range for households
+BUSINESS_RANGE = {
+    'small': (50, 150),
+    'medium': (150, 500),
+    'large': (500, 2000),
+}
+
+# Function to generate random consumption
+def generate_energy_usage(entity_type, days):
+    if entity_type == 'household':
+        return np.random.uniform(HOUSEHOLD_RANGE[0], HOUSEHOLD_RANGE[1], days)
+    elif entity_type == 'small':
+        return np.random.uniform(BUSINESS_RANGE['small'][0], BUSINESS_RANGE['small'][1], days)
+    elif entity_type == 'medium':
+        return np.random.uniform(BUSINESS_RANGE['medium'][0], BUSINESS_RANGE['medium'][1], days)
+    elif entity_type == 'large':
+        return np.random.uniform(BUSINESS_RANGE['large'][0], BUSINESS_RANGE['large'][1], days)
+
+# Generate simulation data
+def simulate_energy_consumption():
+    start_date = datetime.date.today()
+    dates = [start_date + datetime.timedelta(days=i) for i in range(SIMULATION_DAYS)]
+    
+    data = []
+    
+    # Generate household data
+    for i in range(NUM_HOUSEHOLDS):
+        usage = generate_energy_usage('household', SIMULATION_DAYS)
+        for day, energy in zip(dates, usage):
+            data.append([f'Household_{i+1}', 'Household', day, energy])
+    
+    # Generate business data
+    for i in range(NUM_BUSINESSES):
+        biz_type = random.choice(['small', 'medium', 'large'])
+        usage = generate_energy_usage(biz_type, SIMULATION_DAYS)
+        for day, energy in zip(dates, usage):
+            data.append([f'Business_{i+1}', biz_type.capitalize() + ' Business', day, energy])
+    
+    df = pd.DataFrame(data, columns=['Entity', 'Type', 'Date', 'Energy_Usage_kWh'])
+    return df
+
+# Plotting Function
+def display_energy_dashboard(df):
+    plt.figure(figsize=(12, 6))
+    
+    # Daily totals
+    daily_totals = df.groupby('Date')['Energy_Usage_kWh'].sum()
+    
+    # Plot
+    plt.plot(daily_totals.index, daily_totals.values, label='Total Energy Usage (kWh)', color='tab:blue')
+    plt.title('Daily Total Energy Consumption')
+    plt.xlabel('Date')
+    plt.ylabel('Energy Consumption (kWh)')
+    plt.xticks(rotation=45)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+# Main Execution
+if __name__ == "__main__":
+    print("Simulating energy consumption...")
+    energy_df = simulate_energy_consumption()
+    print(energy_df.head())
+    print(f"\nDataset Size: {energy_df.shape[0]} rows")
+    
+    print("\nDisplaying Energy Consumption Dashboard...")
+    display_energy_dashboard(energy_df)
